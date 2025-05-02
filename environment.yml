@@ -1,0 +1,17 @@
+name: landcover_env
+channels:
+  - defaults
+dependencies:
+  - python=3.12
+  - pip
+  - pip:
+    - numpy
+    - pandas
+    - scikit-learn
+    - openpyxl
+    - pillow
+    - torch
+    - torchvision
+    - albumentations
+    - tqdm
+    - matplotlib
