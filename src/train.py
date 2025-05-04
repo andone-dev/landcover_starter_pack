@@ -175,7 +175,7 @@ def train_model(
     n_clusters=5,
     epochs=5,
     max_batches=None,
-    n_estimators=100,
+    n_estimators=50,
 ):
     """모델 타입에 따라 적절한 학습 함수 호출
 
