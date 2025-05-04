@@ -1,12 +1,14 @@
+import os
 import random
 
 import numpy as np
 import torch
+from PIL import Image
 from torch.utils.data import DataLoader
 
 from .evaluate import compute_iou  # mIoU 계산 함수 import
 from .model_lightweight import MiniUNet
-from .model_traditional import KMeansSegmentation
+from .model_traditional import KMeansSegmentation, RandomForestSegmentation
 
 
 def train_kmeans(train_dataset, n_clusters=5):
@@ -29,6 +31,22 @@ def train_kmeans(train_dataset, n_clusters=5):
     kmeans = KMeansSegmentation(n_clusters=n_clusters)
     kmeans.fit(pixel_samples)
     return kmeans
+
+
+def train_rf(train_dataset, n_estimators=50):
+    """Dataset 객체로부터 RandomForest 모델 학습
+
+    Args:
+        train_dataset: 학습 데이터셋
+        n_estimators: 랜덤 포레스트의 트리 개수
+
+    Returns:
+        학습된 RandomForest 모델
+    """
+    # RandomForestSegmentation 인스턴스 생성 및 학습
+    rf_model = RandomForestSegmentation(n_estimators=n_estimators)
+    rf_model.fit(train_dataset, sample_pixels=5000, balanced=True)
+    return rf_model
 
 
 def validate_miniunet(model, val_loader, criterion, device, max_batches=None):
@@ -157,16 +175,18 @@ def train_model(
     n_clusters=5,
     epochs=5,
     max_batches=None,
+    n_estimators=100,
 ):
     """모델 타입에 따라 적절한 학습 함수 호출
 
     Args:
-        model_type: 'kmeans' 또는 'miniunet'
+        model_type: 'kmeans', 'rf' 또는 'miniunet'
         train_dataset: 학습 데이터셋
         val_dataset: 검증 데이터셋 (optional)
         n_clusters: KMeans 클러스터 수
         epochs: 학습 에폭 수
         max_batches: 배치 수 제한 (테스트용)
+        n_estimators: RandomForest의 트리 개수
 
     Returns:
         학습된 모델
@@ -175,6 +195,9 @@ def train_model(
 
     if model_type == "kmeans":
         return train_kmeans(train_dataset, n_clusters)
+
+    elif model_type == "rf":
+        return train_rf(train_dataset, n_estimators)
 
     elif model_type == "miniunet":
         return train_miniunet(train_dataset, val_dataset, epochs, max_batches)
